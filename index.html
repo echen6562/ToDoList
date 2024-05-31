@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Macro 5</title>
+    <style>
+        body{
+            background-image: url('images/corkboard.jpg');
+        }
+        h1 {
+            text-align: center;
+            color: white;
+            text-shadow: 4px 4px 4px black;
+        }
+        #filter {
+            position: fixed;
+            top: 0px;
+            right: 0px;
+            margin: 10px;
+            width: 180px;
+        }
+        #button_add {
+            position: fixed;
+            bottom: 0px;
+            right: 0px;
+            padding: 10px;
+        }
+        #button_add:hover {
+            transform: scale(1.2);
+        }
+        .panel {
+            width: 400px;
+            height: 400px;
+            background-color: #fff;
+            border-radius: 15px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 10px;
+            z-index: 50;
+        }
+        #panel_addnew {
+            justify-content: center;
+            align-items: center;
+        }
+        #new_category{
+            width: 98%;
+        }
+        #new_title{
+            width: 98%;
+        }
+        #new_description{
+            resize: none;
+            height: 60px;
+            width: 98%;
+        }
+        .error{
+            height: 35px;
+            width: 98%;
+            color: white;
+            background-color: red;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .winter {
+            background-color: lightblue;
+        }
+        .fall {
+            background-color: orange;
+        }
+        .spring {
+            background-color: lightgreen;
+        }
+        .summer {
+            background-color: lightyellow;
+        }
+        .todoitem {
+            width: 150px;
+            height: 150px;
+            display: inline-block;
+            margin-right: 20px;
+            font-size: 16px;
+            vertical-align: bottom;
+            position: relative;
+        }
+        .title{
+            margin: 0px;
+            padding: 8px;
+            word-wrap: break-word;
+        }
+        .closeButton{
+            position: absolute;
+            top: -11px;
+            right: -11px;
+        }
+        .completeButton{
+            position: absolute;
+            bottom: 0px;
+            left: 0px;
+        }
+        .incompleteButton{
+            position: absolute;
+            bottom: 0px;
+            right: 0px;
+        }
+        .markedImg{
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+        }
+        .description{
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <h1>Seasonal To-Do List</h1>
+    <select id="filter">
+        <option value="all">Show All Seasons</option>
+        <option value="winter">Show Only Winter Items</option>
+        <option value="spring">Show Only Spring Items</option>
+        <option value="summer">Show Only Summer Items</option>
+        <option value="fall">Show Only Fall Items</option>
+        <option value="completed">Show Only Completed Items</option>
+        <option value="incomplete">Show Only Incomplete Items</option>
+    </select>
+    <img id="button_add" src="images/add_button.png">
+    <div id="panel_addnew" class="panel hidden">
+        <h2>Add New Item</h2>
+        <div id="missingValuesError" class="error hidden"> Please completely fill out the form </div>
+        <p>Title:</p>
+        <input type="text" id="new_title"></input>
+        <p>Category:</p>
+        <select id="new_category">
+            <option value="all">Show all</option>
+            <option value="winter">Winter</option>
+            <option value="spring">Spring</option>
+            <option value="summer">Summer</option>
+            <option value="fall">Fall</option>
+        </select>
+        <p>Description:</p>
+        <textarea type="text" id="new_description"></textarea><br>
+        <button id="new_cancel">Cancel</button>
+        <button id="new_save">Save</button>
+    </div>
+    <div id="panel_info" class="panel hidden">
+        <h2 id="infoTitle"></h2>
+        <p id="infoSeason"></p>
+        <p id="infoDesc"></p>
+        <p id=""></p>
+        <hr>
+        <p id="dateCreated"></p>
+        <p id="lastAccessed"></p>
+        <button id="closeInfo">Close</button>
+
+    </div>
+    <div id="container"></div>
+
+    <script>
+        // set up all of your DOM queries here
+        const button_add = document.querySelector('#button_add');
+        const panel_addnew = document.querySelector('#panel_addnew');
+        const new_title = document.querySelector("#new_title");
+        const new_category = document.querySelector("#new_category");
+        const new_description = document.querySelector("#new_description");
+        const new_cancel = document.querySelector("#new_cancel");
+        const new_save = document.querySelector("#new_save");
+        const container = document.querySelector('#container');
+        const filter = document.querySelector('#filter');
+        const errorMessage = document.querySelector("#missingValuesError");
+        const panelInfo = document.querySelector('#panel_info')
+        const infoTitle = document.querySelector('#infoTitle');
+        const infoSeason = document.querySelector('#infoSeason');
+        const infoDesc = document.querySelector('#infoDesc');
+        const dateCreated = document.querySelector('#dateCreated');
+        const lastAccessed = document.querySelector('#lastAccessed');
+        const closeInfo = document.querySelector('#closeInfo');
+
+        filter.onchange = function(event) {
+            console.log(filter.value);
+        }
+
+        button_add.onclick = function(event) {
+            panel_addnew.classList.remove('hidden');
+            new_category.value = '';
+            new_title.value = '';
+            new_description.value = '';
+        }
+
+        new_cancel.onclick = function(event) {
+            panel_addnew.classList.add('hidden');
+            new_category.value = '';
+            new_title.value = '';
+            new_description.value = '';
+        }
+
+        new_save.onclick = function(event) {
+            /*
+                <div class="todoitem winter">
+                    <p class="title">Title</p>
+                    <img src="images/delete_button.png">
+                </div>
+            */
+
+            filter.value = 'all';
+            filter.dispatchEvent(new Event('change'));
+
+            if(new_category.value == '' || new_category.value == 'all' || new_title.value == '' || new_description.value == ''){
+                errorMessage.classList.remove('hidden');
+                return;
+            }
+            
+            errorMessage.classList.add('hidden');
+
+            let item = document.createElement('div');
+            item.classList.add('todoitem');
+            item.classList.add(new_category.value);
+            item.dataset.title = new_title.value;
+            item.dataset.season = new_category.value;
+            item.dataset.desc = new_description.value;
+            item.dataset.dateCreated = new Date().toLocaleString();
+            item.dataset.lastAccessed = new Date().toLocaleString();
+            item.dataset.completed = false;
+
+            let p = document.createElement('p');
+            p.innerText = new_title.value;
+            p.classList.add('title');
+            item.appendChild(p);
+
+            let imgDelete = document.createElement('img');
+            imgDelete.src = 'images/delete_button.png';
+            imgDelete.classList.add('closeButton');
+            imgDelete.classList.add('hidden');
+
+            let imgComplete = document.createElement('img');
+            imgComplete.src = 'images/complete.png';
+            imgComplete.classList.add('completeButton');
+            imgComplete.classList.add('hidden');
+
+            let imgIncomplete= document.createElement('img');
+            imgIncomplete.src = 'images/incomplete.png';
+            imgIncomplete.classList.add('incompleteButton');
+            imgIncomplete.classList.add('hidden');
+
+            let marked = document.createElement('img');
+            marked.src = 'images/marked.png';
+            marked.classList.add('markedImg');
+            marked.classList.add('hidden');
+
+            imgDelete.onclick = function(event) {
+                event.stopPropagation();
+                imgDelete.parentElement.remove();
+            }
+            imgComplete.onclick = function(event) {
+                event.stopPropagation();
+                imgComplete.parentElement.lastChild.classList.remove('hidden');
+                item.dataset.completed = true;
+                filter.dispatchEvent(new Event('change'));
+            }
+            imgIncomplete.onclick = function(event) {
+                event.stopPropagation();
+                imgComplete.parentElement.lastChild.classList.add('hidden');
+                item.dataset.completed = false;
+                filter.dispatchEvent(new Event('change'));
+            }
+
+            item.onclick = function(){
+                panelInfo.classList.remove('hidden');
+                infoTitle.innerHTML = item.dataset.title;
+                infoTitle.classList.add('description');
+                let seasonName = '';
+                if(item.dataset.season == 'fall'){
+                    seasonName = 'Fall';
+                }
+                else if(item.dataset.season == 'winter'){
+                    seasonName = 'Winter';
+                }
+                else if(item.dataset.season == 'spring'){
+                    seasonName = 'Spring';
+                }
+                else if(item.dataset.season == 'summer'){
+                    seasonName = 'Summer';
+                }
+                infoSeason.innerHTML = 'Season: ' + seasonName;
+                infoDesc.innerHTML = item.dataset.desc;
+                infoDesc.classList.add('description');
+                dateCreated.innerHTML = 'Created: ' + item.dataset.dateCreated;
+                lastAccessed.innerHTML = 'Last Accessed: ' + item.dataset.lastAccessed;
+                item.dataset.lastAccessed = new Date().toLocaleString();;
+
+                closeInfo.onclick = function(){
+                    panelInfo.classList.add('hidden');
+                }
+            }
+
+            item.onmouseover = function(){
+                for(let i = 0; i < item.children.length; i++){
+                    if(item.children[i].tagName === 'IMG'){
+                        if (!item.children[i].src.endsWith('images/marked.png')) {
+                            item.children[i].classList.remove('hidden'); 
+                        }
+                    }
+                }
+            }
+
+            item.onmouseout = function(){
+                for(let i = 0; i < item.children.length; i++){
+                    if(item.children[i].tagName === 'IMG'){
+                        if (!item.children[i].src.endsWith('images/marked.png')) {
+                            item.children[i].classList.add('hidden'); 
+                        }
+                    }
+                }
+            }
+
+            item.appendChild(imgDelete);
+            item.appendChild(imgComplete);
+            item.appendChild(imgIncomplete);
+            item.appendChild(marked);
+
+
+            new_category.value = '';
+            new_title.value = '';
+            new_description.value = '';
+
+            container.appendChild(item);
+
+            panel_addnew.classList.add('hidden');
+        }
+
+        filter.onchange = function(){
+            let seasonFilter = filter.value;
+            let items = container.children;
+
+            if(seasonFilter == 'all'){
+                for(let i = 0; i < items.length; i++){
+                    items[i].classList.remove('hidden');
+                }
+                return;
+            }
+            if(seasonFilter == 'completed'){
+                for(let i = 0; i < items.length; i++){
+                    if(items[i].dataset.completed == 'false'){
+                        items[i].classList.add('hidden');
+                    }
+                    else{
+                        items[i].classList.remove('hidden');
+                    }
+                }
+            }
+            else if(seasonFilter == 'incomplete'){
+                for(let i = 0; i < items.length; i++){
+                    if(items[i].dataset.completed == 'true'){
+                        items[i].classList.add('hidden');
+                    }
+                    else{
+                        items[i].classList.remove('hidden');
+                    }
+                }
+            }
+            else{
+                for(let j = 0; j < items.length; j++){
+                    if(items[j].dataset.season != seasonFilter){
+                        items[j].classList.add('hidden');
+                    }
+                    else if(items[j].dataset.season == seasonFilter){
+                        items[j].classList.remove('hidden');
+                    }
+                }
+            }
+        }
+
+    </script>
+</body>
+</html>
